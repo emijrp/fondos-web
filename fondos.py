@@ -187,7 +187,7 @@ def main():
 <center><a href="%s">%s</a> / Commons</center>
 <br/>
 </div>
-""" % (props["urldesc"], props["title"], props["urlthumb"], getThumb(url=props["urlthumb"], res="800px"), getThumb(url=props["urlthumb"], res="1024px"), getThumb(url=props["urlthumb"], res="1240px"), getThumb(url=props["urlthumb"], res="1440px"), getThumb(url=props["urlthumb"], res="1600px"), getThumb(url=props["urlthumb"], res="1920px"), getThumb(url=props["urlthumb"], res="2048px"), getThumb(url=props["urlthumb"], res="3200px"), props["urldesc"], props["author"] and props["author"] or translations[lang]["See info"])
+""" % (props["urldesc"], props["title"], props["urlthumb"], getThumb(url=props["url"], res="800px"), getThumb(url=props["url"], res="1024px"), getThumb(url=props["url"], res="1240px"), getThumb(url=props["url"], res="1440px"), getThumb(url=props["url"], res="1600px"), getThumb(url=props["url"], res="1920px"), getThumb(url=props["url"], res="2048px"), getThumb(url=props["url"], res="3200px"), props["urldesc"], props["author"] and props["author"] or translations[lang]["See info"])
                 gallery.append(galleryitem)
                 if random.randint(0, 9) == 0:
                     if len(maingallery) == 0:
