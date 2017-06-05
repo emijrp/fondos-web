@@ -189,7 +189,7 @@ def main():
         cpage = 1
         while (cpage-1) * gallerylimit <= len(gallery):
             galleryplain = ''.join(gallery[(cpage-1) * gallerylimit:cpage * gallerylimit])
-            menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(round(len(gallery)/gallerylimit)))])
+            menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(round(len(gallery)/gallerylimit))+1)])
             output = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
