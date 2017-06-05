@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import math
 import random
 import re
 import unicodedata
@@ -68,13 +69,13 @@ def getAuthor(text=''):
     m = re.findall(r"(?im)\|\s*Author\s*=\s*(.*?)\n", text)
     if m:
         author = m[0].strip()
+    author = re.sub(r"(?im)\[\[\s*\:?\s*(Image|File)\s*:[^\[\]]*?\]\]", r"", author) #before removing [[]]
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\|([^\[\]\|]*?)\]\]", r"\2", author)
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\]\]", r"\1", author)
     author = re.sub(r"(?im)\[[^\[\]\| ]*? ([^\[\]\|]*?)\]", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*User\s*:([^/\{\}]+?)/[^\{\}]*?\}\}", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*Creator\s*:([^/\{\}]+?)\}\}", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*user at project\s*\|([^|]*?)\|[^\{\}]*?\}\}", r"\1", author)
-    author = re.sub(r"(?im)\[\[\s*\:?\s*(Image|File)\s*:[^\[\]]*?\]\]", r"", author)
     return author.strip()
 
 def getThumb(url='', res=''):
@@ -201,15 +202,15 @@ def main():
             galleryplain = ''.join(gallery[(cpage-1) * gallerylimit:cpage * gallerylimit])
             menupages = ""
             if len(gallery) > gallerylimit:
-                menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(round(len(gallery)/gallerylimit))+1)])
+                menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(math.ceil(len(gallery)/gallerylimit))+1)])
             output = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>Fondos de pantalla de %s</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     
-    <meta name="twitter:title" content="Los mejores fondos de pantalla"/>
-    <meta name="keywords" content="fondos de pantalla de %s, fondos de escritorio de %s, wallpapers, imagenes de %s, fotos, pantalla, escritorio"/>
+    <meta name="twitter:title" content="Fondos de pantalla de %s"/>
+    <meta name="keywords" content="fondos de pantalla de %s, fondos de escritorio de %s, wallpapers, imagenes de %s, fotos, pantalla, escritorio, descargar fondos, fondos gratis, fondos hd, fondos bonitos"/>
     <meta name="description" content="Una selección de los mejores fondos de pantalla de %s para tu ordenador. Revisa también nuestras otras categorías..."/>
     <meta name="twitter:description" content="Una selección de los mejores fondos de pantalla de %s para tu ordenador. Revisa también nuestras otras categorías..."/>
     <meta name="twitter:card" content="summary"/>
@@ -236,7 +237,7 @@ def main():
 
 
 </body>
-</html>""" % (translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], metacardimgsrc, filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
+</html>""" % (translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], metacardimgsrc, filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
             if cpage == 1:
                 menulist.append([filelabel, filehtml])
             filehtmlpage = filehtml
@@ -261,7 +262,7 @@ def main():
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     
     <meta name="twitter:title" content="Los mejores fondos de pantalla"/>
-    <meta name="keywords" content="fondos de pantalla, fondos de escritorio, wallpapers, imagenes, fotos, pantalla, escritorio"/>
+    <meta name="keywords" content="fondos de pantalla, fondos de escritorio, wallpapers, imagenes, fotos, pantalla, escritorio, descargar fondos, fondos gratis, fondos hd, fondos bonitos"/>
     <meta name="description" content="Una selección de los mejores fondos de pantalla para tu ordenador. Fondos de animales, arquitectura, naturaleza, paisajes, astronomía y mucho más..."/>
     <meta name="twitter:description" content="Una selección de los mejores fondos de pantalla para tu ordenador. Fondos de animales, arquitectura, naturaleza, paisajes, astronomía y mucho más..."/>
     <meta name="twitter:card" content="summary"/>
