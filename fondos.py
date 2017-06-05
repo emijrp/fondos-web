@@ -16,27 +16,66 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import random
 import re
+import unicodedata
 import urllib.request
 
 translations = {
     "es": {
+        "Amphibians": "Anfibios", 
+        "Architecture": "Arquitectura", 
+        "Astronomy": "Astronomía", 
         "Birds": "Aves", 
+        "Fish": "Peces", 
+        "Insects": "Insectos", 
+        "Mammals": "Mamíferos", 
+        "Molluscs": "Moluscos", 
+        "Objects": "Objetos", 
+        "Oceans": "Océanos", 
+        "Landscapes": "Paisajes", 
+        "Plants": "Plantas", 
+        "Reptiles": "Reptiles", 
+        "Spiders": "Arañas", 
+        "Transport": "Transporte", 
+        "See info": "Ver info", 
     }, 
 }
 categories = {
+    "Amphibians": ["Featured pictures of amphibians"], 
+    "Architecture": ["Featured pictures of architecture"], 
+    "Astronomy": ["Featured pictures of astronomy"], 
     "Birds": ["Featured pictures of birds"], 
+    "Fish": ["Featured pictures of fish"], 
+    "Insects": ["Featured pictures of insects"], 
+    "Landscapes": ["Featured pictures of landscapes"], 
+    "Mammals": ["Featured pictures of mammals"], 
+    "Molluscs": ["Featured pictures of molluscs"], 
+    "Objects": ["Featured pictures of objects"], 
+    "Oceans": ["Featured pictures of oceans"], 
+    "Plants": ["Featured pictures of plants"], 
+    "Reptiles": ["Featured pictures of reptiles"], 
+    "Spiders": ["Featured pictures of spiders"], 
+    "Transport": ["Featured pictures of transport"], 
 }
 
+def removeaccents(s):
+    return ''.join(c for c in unicodedata.normalize('NFD', s)
+                  if unicodedata.category(c) != 'Mn')
+                  
 def getAuthor(text=''):
     author = ''
     m = re.findall(r"(?im)\|\s*Author\s*=\s*(.*?)\n", text)
     if m:
-        author = m[0]
+        author = m[0].strip()
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\|([^\[\]\|]*?)\]\]", r"\2", author)
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\]\]", r"\1", author)
     author = re.sub(r"(?im)\[([^\[\]\| ]*?)([^\[\]\|]*?)\]", r"\1", author)
-    return author
+    author = re.sub(r"(?im)\{\{\s*User\s*:([^/\{\}]+?)/[^\{\}]*?\}\}", r"\1", author)
+    author = re.sub(r"(?im)\{\{\s*Creator\s*:([^/\{\}]+?)\}\}", r"\1", author)
+    author = re.sub(r"(?im)\{\{\s*user at project\s*\|([^|]*?)\|[^\{\}]*?\}\}", r"\1", author)
+    author = re.sub(r"(?im)\[\[(Image|File):[^\[\]]*?\]\]", r"", author)
+    return author.strip()
 
 def getImagesFromCategory(commonscat=''):
     images = []
@@ -56,9 +95,9 @@ def getImagesFromCategory(commonscat=''):
                     author = getAuthor(props["revisions"][0]["*"])
                     width = props["imageinfo"][0]["width"]
                     height = props["imageinfo"][0]["height"]
-                    if height > width:
-                        continue
-                    if width < 1920:
+                    if height > width or \
+                        width < 1920 or \
+                        (width > height*2.5 or width < height*1.5):
                         continue
                     url = props["imageinfo"][0]["url"]
                     urldesc = props["imageinfo"][0]["descriptionurl"]
@@ -111,62 +150,112 @@ def getURL(url=''):
 
 def main():
     lang = "es"
-    #categories
     menulist = []
+    ctotal = 0
+    maingallery = []
+    gallerylimit = 25
     for catname, commonscats in categories.items():
         print(catname)
-        output = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <title>%s - Los mejores fondos de pantalla del mundo</title>
-    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-    
-</head>
-<body>
-""" % (translations[lang][catname])
+        filelabel = translations[lang][catname]
+        filehtmlprefix = "%s" % (re.sub(' ', '-', translations[lang][catname].lower()))
+        filehtmlprefix = removeaccents(filehtmlprefix)
+        filehtml = "%s.html" % (filehtmlprefix)
         commonscats2 = commonscats
         for commonscat in commonscats2:
             commonscats = commonscats + getSubcategories(commonscat)
         commonscats = list(set(commonscats))
         commonscats.sort()
+        c = 0
+        gallery = []
         for commonscat in commonscats:
             print(commonscat)
             images = getImagesFromCategory(commonscat)
             images.sort()
             for title, props in images:
-                output += """
-<div style="float: left; width: 200px;height: 300px;padding: 5px;margin: 2px;background-color: lightyellow;border: 1px solid orange;">
-<a href="%s"><img src="%s" width="200px" height="150px" /></a>
+                galleryitem = """
+<div style="float: left; width: 210px;height: 300px;padding: 2px;margin: 2px;background-color: lightyellow;border: 1px solid orange;">
+<a href="%s"><img src="%s" width="200px" height="140px" /></a>
+<center><a href="%s">1240px</a> · <a href="%s">1440px</a><br/><a href="%s">1600px</a> · <a href="%s">1920px</a></center>
+<center><br/><a href="%s">%s</a> / Commons</center>
 <br/>
-<center><a href="%s">%s</a> / Commons</center>
-<br/>
-<center>Tamaños:<br/><a href="%s">1240px</a> · <a href="%s">1440px</a><br/><a href="%s">1600px</a> · <a href="%s">1920px</a></center>
 </div>
-""" % (props["urldesc"], props["urlthumb"], props["urldesc"], props["author"], props["urlthumb1240px"], props["urlthumb1440px"], props["urlthumb1600px"], props["urlthumb1920px"])
-        output += """
+""" % (props["urldesc"], props["urlthumb"], props["urlthumb1240px"], props["urlthumb1440px"], props["urlthumb1600px"], props["urlthumb1920px"], props["urldesc"], props["author"] and props["author"] or translations[lang]["See info"])
+                gallery.append(galleryitem)
+                if random.randint(0, 9) == 0:
+                    maingallery.append(galleryitem)
+                c += 1
+                ctotal += 1
+        #random.shuffle(gallery)
+        cpage = 1
+        while (cpage-1) * gallerylimit <= len(gallery):
+            galleryplain = ''.join(gallery[(cpage-1) * gallerylimit:cpage * gallerylimit])
+            menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(round(len(gallery)/gallerylimit)))])
+            output = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>%s - Los mejores fondos de pantalla</title>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<h2><a href="%s">Fondos de pantalla de %s</a></h2>
+
+<p>Una selección de las mejores <b>imágenes de %s</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de %s <b>fondos de pantalla</b> con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y otras cosas.</p>
+
+<p><a href="index.html">&lt;&lt; Volver a la portada</a></p>
+
+<center>
+%s
+</center>
+
+<div style="margin-top: 5px;">
+%s
+</div>
+
+
 </body>
-</html>"""
-        filelabel = translations[lang][catname]
-        filehtml = "%s.html" % (re.sub(' ', '-', translations[lang][catname].lower()))
-        menulist.append([filelabel, filehtml])
-        with open(filehtml, "w") as f:
-            f.write(output)
+</html>""" % (translations[lang][catname], filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
+            if cpage == 1:
+                menulist.append([filelabel, filehtml])
+            filehtmlpage = filehtml
+            if cpage > 1:
+                filehtmlpage = filehtml.split('.html')[0] + str(cpage) + '.html'
+            with open(filehtmlpage, "w") as f:
+                f.write(output)
+            cpage += 1
     
     #index
+    menulist.sort()
     menu = ""
     for menuitem in menulist:
-        menu += '<a href="%s">%s</a>' % (menuitem[1], menuitem[0])
+        menu += '<a class="mw-ui-button mw-ui-blue" href="%s">%s</a> ' % (menuitem[1], menuitem[0])
+    
+    random.shuffle(maingallery)
+    maingallery = ''.join(maingallery[:gallerylimit])
     index = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Los mejores fondos de pantalla del mundo</title>
+    <title>Los mejores fondos de pantalla</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
     
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<h2><a href="index.html">Fondos de pantalla</a></h2>
+
+<p>Una selección de las <b>mejores imágenes</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de <b>%s fondos</b> de pantalla con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y descripciones.</p>
+
+<center>%s</center>
+
+<div style="margin-top: 5px;">
 %s
+</div>
+
+<br/><br/>
+
 </body>
-</html>""" % (menu)
+</html>""" % (ctotal, menu, ''.join(maingallery))
     with open("index.html", "w") as f:
         f.write(index)
 
