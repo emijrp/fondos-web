@@ -70,12 +70,15 @@ def getAuthor(text=''):
         author = m[0].strip()
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\|([^\[\]\|]*?)\]\]", r"\2", author)
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\]\]", r"\1", author)
-    author = re.sub(r"(?im)\[([^\[\]\| ]*?)([^\[\]\|]*?)\]", r"\1", author)
+    author = re.sub(r"(?im)\[[^\[\]\| ]*? ([^\[\]\|]*?)\]", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*User\s*:([^/\{\}]+?)/[^\{\}]*?\}\}", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*Creator\s*:([^/\{\}]+?)\}\}", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*user at project\s*\|([^|]*?)\|[^\{\}]*?\}\}", r"\1", author)
-    author = re.sub(r"(?im)\[\[(Image|File):[^\[\]]*?\]\]", r"", author)
+    author = re.sub(r"(?im)\[\[\s*\:?\s*(Image|File)\s*:[^\[\]]*?\]\]", r"", author)
     return author.strip()
+
+def getThumb(url='', res=''):
+    return re.sub(r"/commons/", r"/commons/thumb/", url) + '/' + res + '-' + url.split('/')[-1]
 
 def getImagesFromCategory(commonscat=''):
     images = []
@@ -105,11 +108,7 @@ def getImagesFromCategory(commonscat=''):
                         "title": title, 
                         "url": url, 
                         "urldesc": urldesc, 
-                        "urlthumb": re.sub(r"/commons/", r"/commons/thumb/", url) + '/200px-' + url.split('/')[-1], 
-                        "urlthumb1240px": re.sub(r"/commons/", r"/commons/thumb/", url) + '/1240px-' + url.split('/')[-1], 
-                        "urlthumb1440px": re.sub(r"/commons/", r"/commons/thumb/", url) + '/1440px-' + url.split('/')[-1], 
-                        "urlthumb1600px": re.sub(r"/commons/", r"/commons/thumb/", url) + '/1600px-' + url.split('/')[-1], 
-                        "urlthumb1920px": re.sub(r"/commons/", r"/commons/thumb/", url) + '/1920px-' + url.split('/')[-1], 
+                        "urlthumb": getThumb(url=url, res='200px'), 
                         "author": author, 
                     }
                     images.append([title, dic])
@@ -167,21 +166,32 @@ def main():
         commonscats.sort()
         c = 0
         gallery = []
+        metacardimgsrc = ""
         for commonscat in commonscats:
             print(commonscat)
             images = getImagesFromCategory(commonscat)
             images.sort()
             for title, props in images:
+                if c == 0:
+                    metacardimgsrc = props["urlthumb"]
                 galleryitem = """
-<div style="float: left; width: 210px;height: 300px;padding: 2px;margin: 2px;background-color: lightyellow;border: 1px solid orange;">
-<a href="%s"><img src="%s" width="200px" height="140px" /></a>
-<center><a href="%s">1240px</a> · <a href="%s">1440px</a><br/><a href="%s">1600px</a> · <a href="%s">1920px</a></center>
-<center><br/><a href="%s">%s</a> / Commons</center>
+<div style="float: left; width: 210px;height: 300px;padding: 2px;margin: 2px 2px 10px 2px;background-color: lightyellow;border: 1px solid orange;">
+<a href="%s" title="%s"><img src="%s" width="200px" height="140px" /></a>
+<center>
+<a href="%s">800px</a> · <a href="%s">1024px</a><br/>
+<a href="%s">1240px</a> · <a href="%s">1440px</a><br/>
+<a href="%s">1600px</a> · <a href="%s">1920px</a><br/>
+<a href="%s">2048px</a> · <a href="%s">3200px</a>
+</center>
+<br/>
+<center><a href="%s">%s</a> / Commons</center>
 <br/>
 </div>
-""" % (props["urldesc"], props["urlthumb"], props["urlthumb1240px"], props["urlthumb1440px"], props["urlthumb1600px"], props["urlthumb1920px"], props["urldesc"], props["author"] and props["author"] or translations[lang]["See info"])
+""" % (props["urldesc"], props["title"], props["urlthumb"], getThumb(url=props["urlthumb"], res="800px"), getThumb(url=props["urlthumb"], res="1024px"), getThumb(url=props["urlthumb"], res="1240px"), getThumb(url=props["urlthumb"], res="1440px"), getThumb(url=props["urlthumb"], res="1600px"), getThumb(url=props["urlthumb"], res="1920px"), getThumb(url=props["urlthumb"], res="2048px"), getThumb(url=props["urlthumb"], res="3200px"), props["urldesc"], props["author"] and props["author"] or translations[lang]["See info"])
                 gallery.append(galleryitem)
                 if random.randint(0, 9) == 0:
+                    if len(maingallery) == 0:
+                        metacardimgsrcmain = props["urlthumb"]
                     maingallery.append(galleryitem)
                 c += 1
                 ctotal += 1
@@ -189,19 +199,30 @@ def main():
         cpage = 1
         while (cpage-1) * gallerylimit <= len(gallery):
             galleryplain = ''.join(gallery[(cpage-1) * gallerylimit:cpage * gallerylimit])
-            menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(round(len(gallery)/gallerylimit))+1)])
+            menupages = ""
+            if len(gallery) > gallerylimit:
+                menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(round(len(gallery)/gallerylimit))+1)])
             output = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>%s - Los mejores fondos de pantalla</title>
+    <title>Fondos de pantalla de %s</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    
+    <meta name="twitter:title" content="Los mejores fondos de pantalla"/>
+    <meta name="keywords" content="fondos de pantalla de %s, fondos de escritorio de %s, wallpapers, imagenes de %s, fotos, pantalla, escritorio"/>
+    <meta name="description" content="Una selección de los mejores fondos de pantalla de %s para tu ordenador. Revisa también nuestras otras categorías..."/>
+    <meta name="twitter:description" content="Una selección de los mejores fondos de pantalla de %s para tu ordenador. Revisa también nuestras otras categorías..."/>
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:domain" content="http://fondos.org.es"/>
+    <meta name="twitter:creator" content="Fondos.org.es"/>
+    <meta name="twitter:image:src" content="%s"/>
     
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <h2><a href="%s">Fondos de pantalla de %s</a></h2>
 
-<p>Una selección de las mejores <b>imágenes de %s</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de %s <b>fondos de pantalla</b> con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y otras cosas.</p>
+<p>Una selección de las mejores <b>imágenes de %s</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de <b>%s fondos</b> de pantalla con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y otras cosas.</p>
 
 <p><a href="index.html">&lt;&lt; Volver a la portada</a></p>
 
@@ -215,7 +236,7 @@ def main():
 
 
 </body>
-</html>""" % (translations[lang][catname], filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
+</html>""" % (translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], metacardimgsrc, filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
             if cpage == 1:
                 menulist.append([filelabel, filehtml])
             filehtmlpage = filehtml
@@ -232,12 +253,21 @@ def main():
         menu += '<a class="mw-ui-button mw-ui-blue" href="%s">%s</a> ' % (menuitem[1], menuitem[0])
     
     random.shuffle(maingallery)
-    maingallery = ''.join(maingallery[:gallerylimit])
+    maingalleryplain = ''.join(maingallery[:gallerylimit])
     index = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>Los mejores fondos de pantalla</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    
+    <meta name="twitter:title" content="Los mejores fondos de pantalla"/>
+    <meta name="keywords" content="fondos de pantalla, fondos de escritorio, wallpapers, imagenes, fotos, pantalla, escritorio"/>
+    <meta name="description" content="Una selección de los mejores fondos de pantalla para tu ordenador. Fondos de animales, arquitectura, naturaleza, paisajes, astronomía y mucho más..."/>
+    <meta name="twitter:description" content="Una selección de los mejores fondos de pantalla para tu ordenador. Fondos de animales, arquitectura, naturaleza, paisajes, astronomía y mucho más..."/>
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:domain" content="http://fondos.org.es"/>
+    <meta name="twitter:creator" content="Fondos.org.es"/>
+    <meta name="twitter:image:src" content="%s"/>
     
     <link rel="stylesheet" href="style.css" />
 </head>
@@ -255,7 +285,7 @@ def main():
 <br/><br/>
 
 </body>
-</html>""" % (ctotal, menu, ''.join(maingallery))
+</html>""" % (metacardimgsrcmain, ctotal, menu, ''.join(maingalleryplain))
     with open("index.html", "w") as f:
         f.write(index)
 
