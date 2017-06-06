@@ -226,8 +226,8 @@ def main():
             menupages = ""
             if len(gallery) > gallerylimit:
                 menupages = " ".join(['<a class="mw-ui-button mw-ui-blue" href="%s%s.html">%s</a>' % (filehtmlprefix, i != 1 and i or '', i) for i in range(1, int(math.ceil(len(gallery)/gallerylimit))+1)])
-            output = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+            output = """<!DOCTYPE html>
+<html lang="es" dir="ltr">
 <head>
     <title>Fondos de pantalla de %s</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
@@ -253,15 +253,18 @@ def main():
 <center>
 %s
 
-<div style="clear: both; margin-top: 5px;">
+<div style="clear: both; float: center;margin-top: 5px;">
 %s
 </div>
 </center>
 
 <div class="footer">
 <hr/>
+<a href="http://wikis.cc">Crea tu wiki</a> · 
+<a href="http://locapedia.wikis.cc">Crear una locapedia</a> · 
 <a href="http://fondos.org.es">Fondos de pantalla</a> · 
-<a href="http://wikis.org.es">Wikis</a>
+<a href="http://librefind.org">LibreFind</a> · 
+<a href="http://wikis.org.es">Locapedias</a>
 </div>
 
 </body>
@@ -285,8 +288,8 @@ def main():
     
     random.shuffle(maingallery)
     maingalleryplain = ''.join(maingallery[:gallerylimit])
-    index = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+    index = """<!DOCTYPE html>
+<html lang="es" dir="ltr">
 <head>
     <title>Los mejores fondos de pantalla</title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8" />
@@ -310,19 +313,22 @@ def main():
 <center>
 %s
 
-<div style="clear: both; margin-top: 5px;">
+<div style="clear: both; float: center; margin-top: 5px;">
 %s
 </div>
 
-<div style="clear: both; margin-top: 5px;">
+<div style="clear: both; float: center; margin-top: 5px;">
 %s
 </div>
 </center>
 
 <div class="footer">
 <hr/>
+<a href="http://wikis.cc">Crea tu wiki</a> · 
+<a href="http://locapedia.wikis.cc">Crear una locapedia</a> · 
 <a href="http://fondos.org.es">Fondos de pantalla</a> · 
-<a href="http://wikis.org.es">Wikis</a>
+<a href="http://librefind.org">LibreFind</a> · 
+<a href="http://wikis.org.es">Locapedias</a>
 </div>
 
 </body>
