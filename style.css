@@ -3,7 +3,18 @@ body{
     font-size: 100%;
     margin: auto;
     width: 95%;
+    background: #E6E6FA;
     /*background: -webkit-linear-gradient(left, #ffd78d, #edf29b 1240px, white 100%, white);*/
+}
+
+div.picture {
+    float: left;
+    width: 210px;
+    height: 300px;
+    padding: 2px;
+    margin: 2px 2px 10px 2px;
+    background: #FAF3DD;
+    border: 1px solid #f9cc7b;
 }
 
 a:link, a:visited{
@@ -14,6 +25,10 @@ a:hover, a:active{
 }
 
 div.footer{
+    clear: both;
+    width: 100%;
+    text-align: center;
+    margin: 10px 0px 0px 10px;
     padding-bottom: 40px;
 }
 

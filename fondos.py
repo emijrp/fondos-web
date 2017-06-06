@@ -20,42 +20,57 @@ import math
 import random
 import re
 import unicodedata
+import urllib.parse
 import urllib.request
 
 translations = {
     "es": {
+        "Africa": "África", 
         "Amphibians": "Anfibios", 
+        "Antarctica": "Antártida", 
         "Architecture": "Arquitectura", 
+        "Asia": "Asia", 
         "Astronomy": "Astronomía", 
         "Birds": "Aves", 
+        "Europe": "Europa", 
         "Fish": "Peces", 
         "Insects": "Insectos", 
         "Mammals": "Mamíferos", 
         "Molluscs": "Moluscos", 
+        "North America": "América del Norte", 
         "Objects": "Objetos", 
+        "Oceania": "Oceanía", 
         "Oceans": "Océanos", 
         "Landscapes": "Paisajes", 
         "Plants": "Plantas", 
         "Reptiles": "Reptiles", 
+        "South America": "América del Sur", 
         "Spiders": "Arañas", 
         "Transport": "Transporte", 
         "See info": "Ver info", 
     }, 
 }
 categories = {
+    "Africa": ["Featured pictures of Africa"], 
     "Amphibians": ["Featured pictures of amphibians"], 
+    "Antarctica": ["Featured pictures of Antarctica"], 
     "Architecture": ["Featured pictures of architecture"], 
+    "Asia": ["Featured pictures of Asia"], 
     "Astronomy": ["Featured pictures of astronomy"], 
     "Birds": ["Featured pictures of birds"], 
+    "Europe": ["Featured pictures of Europe"], 
     "Fish": ["Featured pictures of fish"], 
     "Insects": ["Featured pictures of insects"], 
     "Landscapes": ["Featured pictures of landscapes"], 
     "Mammals": ["Featured pictures of mammals"], 
     "Molluscs": ["Featured pictures of molluscs"], 
+    "North America": ["Featured pictures of North America"], 
     "Objects": ["Featured pictures of objects"], 
+    "Oceania": ["Featured pictures of Oceania"], 
     "Oceans": ["Featured pictures of oceans"], 
     "Plants": ["Featured pictures of plants"], 
     "Reptiles": ["Featured pictures of reptiles"], 
+    "South America": ["Featured pictures of South America"], 
     "Spiders": ["Featured pictures of spiders"], 
     "Transport": ["Featured pictures of transport"], 
 }
@@ -69,6 +84,8 @@ def getAuthor(text=''):
     m = re.findall(r"(?im)\|\s*Author\s*=\s*(.*?)\n", text)
     if m:
         author = m[0].strip()
+    author = re.sub(r"(?im)<[^<>]+?>([^<>]*?)<[^<>]+?>", r"\1", author) #<b><i>...
+    author = re.sub(r"(?im)\'\'+", r"", author) #'''
     author = re.sub(r"(?im)\[\[\s*\:?\s*(Image|File)\s*:[^\[\]]*?\]\]", r"", author) #before removing [[]]
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\|([^\[\]\|]*?)\]\]", r"\2", author)
     author = re.sub(r"(?im)\[\[([^\[\]\|]*?)\]\]", r"\1", author)
@@ -76,7 +93,7 @@ def getAuthor(text=''):
     author = re.sub(r"(?im)\{\{\s*User\s*:([^/\{\}]+?)/[^\{\}]*?\}\}", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*Creator\s*:([^/\{\}]+?)\}\}", r"\1", author)
     author = re.sub(r"(?im)\{\{\s*user at project\s*\|([^|]*?)\|[^\{\}]*?\}\}", r"\1", author)
-    return author.strip()
+    return author.strip().strip('*').strip('.').strip()
 
 def getThumb(url='', res=''):
     return re.sub(r"/commons/", r"/commons/thumb/", url) + '/' + res + '-' + url.split('/')[-1]
@@ -91,32 +108,33 @@ def getImagesFromCategory(commonscat=''):
         if gcmcontinue and gcmcontinue != "unknown":
             query += '&gcmcontinue=' + gcmcontinue
         raw = getURL(query)
-        json1 = json.loads(raw)
-        if 'query' in json1:
-            if 'pages' in json1['query']:
-                for page, props in json1['query']['pages'].items():
-                    title = props["title"]
-                    author = getAuthor(props["revisions"][0]["*"])
-                    width = props["imageinfo"][0]["width"]
-                    height = props["imageinfo"][0]["height"]
-                    if height > width or \
-                        width < 1920 or \
-                        (width > height*2.5 or width < height*1.5):
-                        continue
-                    url = props["imageinfo"][0]["url"]
-                    urldesc = props["imageinfo"][0]["descriptionurl"]
-                    dic = {
-                        "title": title, 
-                        "url": url, 
-                        "urldesc": urldesc, 
-                        "urlthumb": getThumb(url=url, res='200px'), 
-                        "author": author, 
-                    }
-                    images.append([title, dic])
-        if 'continue' in json1:
-            if 'gcmcontinue' in json1['continue']:
-                gcmcontinue = json1['continue']['gcmcontinue']
-                continue
+        if raw:
+            json1 = json.loads(raw)
+            if 'query' in json1:
+                if 'pages' in json1['query']:
+                    for page, props in json1['query']['pages'].items():
+                        title = props["title"]
+                        author = getAuthor(props["revisions"][0]["*"])
+                        width = props["imageinfo"][0]["width"]
+                        height = props["imageinfo"][0]["height"]
+                        if height > width or \
+                            width < 1920 or \
+                            (width > height*2.5 or width < height*1.5):
+                            continue
+                        url = props["imageinfo"][0]["url"]
+                        urldesc = props["imageinfo"][0]["descriptionurl"]
+                        dic = {
+                            "title": title, 
+                            "url": url, 
+                            "urldesc": urldesc, 
+                            "urlthumb": getThumb(url=url, res='200px'), 
+                            "author": author, 
+                        }
+                        images.append([title, dic])
+            if 'continue' in json1:
+                if 'gcmcontinue' in json1['continue']:
+                    gcmcontinue = json1['continue']['gcmcontinue']
+                    continue
         gcmcontinue = ''
     return images
 
@@ -144,14 +162,19 @@ def getSubcategories(commonscat=''):
     return subcategories
 
 def getURL(url=''):
-    f = urllib.request.urlopen(url)
-    raw = f.read()
-    return raw.decode("utf-8")
+    raw = ""
+    try:
+        f = urllib.request.urlopen(url)
+        raw = f.read()
+        return raw.decode("utf-8")
+    except:
+        print("Error retrieving: %s" % url)
+    return raw
 
 def main():
     lang = "es"
     menulist = []
-    ctotal = 0
+    ctotal = set()
     maingallery = []
     gallerylimit = 25
     for catname, commonscats in categories.items():
@@ -176,7 +199,7 @@ def main():
                 if c == 0:
                     metacardimgsrc = props["urlthumb"]
                 galleryitem = """
-<div style="float: left; width: 210px;height: 300px;padding: 2px;margin: 2px 2px 10px 2px;background-color: lightyellow;border: 1px solid orange;">
+<div class="picture">
 <a href="%s" title="%s"><img src="%s" width="200px" height="140px" /></a>
 <center>
 <a href="%s">800px</a> · <a href="%s">1024px</a><br/>
@@ -195,7 +218,7 @@ def main():
                         metacardimgsrcmain = props["urlthumb"]
                     maingallery.append(galleryitem)
                 c += 1
-                ctotal += 1
+                ctotal.add(title)
         #random.shuffle(gallery)
         cpage = 1
         while (cpage-1) * gallerylimit <= len(gallery):
@@ -221,20 +244,25 @@ def main():
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<h2><a href="%s">Fondos de pantalla de %s</a></h2>
+<h1><a href="%s">Fondos de pantalla de %s</a></h1>
 
-<p>Una selección de las mejores <b>imágenes de %s</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de <b>%s fondos</b> de pantalla con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y otras cosas.</p>
+<p>Una selección de las mejores <b>imágenes de %s</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de <b>%s fondos</b> de pantalla de excelente calidad con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y descripciones.</p>
 
 <p><a href="index.html">&lt;&lt; Volver a la portada</a></p>
 
 <center>
 %s
-</center>
 
-<div style="margin-top: 5px;">
+<div style="clear: both; margin-top: 5px;">
 %s
 </div>
+</center>
 
+<div class="footer">
+<hr/>
+<a href="http://fondos.org.es">Fondos de pantalla</a> · 
+<a href="http://wikis.org.es">Wikis</a>
+</div>
 
 </body>
 </html>""" % (translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], metacardimgsrc, filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
@@ -250,8 +278,10 @@ def main():
     #index
     menulist.sort()
     menu = ""
+    menu2 = ""
     for menuitem in menulist:
         menu += '<a class="mw-ui-button mw-ui-blue" href="%s">%s</a> ' % (menuitem[1], menuitem[0])
+        menu2 += '%s<a href="%s">Fondos de pantalla de %s</a>' % (menu2 and ' · ' or '', menuitem[1], menuitem[0])
     
     random.shuffle(maingallery)
     maingalleryplain = ''.join(maingallery[:gallerylimit])
@@ -273,20 +303,30 @@ def main():
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<h2><a href="index.html">Fondos de pantalla</a></h2>
+<h1><a href="index.html">Fondos de pantalla</a></h1>
 
-<p>Una selección de las <b>mejores imágenes</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de <b>%s fondos</b> de pantalla con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y descripciones.</p>
+<p>Una selección de las <b>mejores imágenes</b> extraídas de <a href="https://commons.wikimedia.org">Wikimedia Commons</a> para usarlas como fondos de escritorio. Un total de <b>%s fondos</b> de pantalla de excelente calidad con licencias libres. Haz click en las imágenes para consultar la información de autoría, licencia y descripciones.</p>
 
-<center>%s</center>
+<center>
+%s
 
-<div style="margin-top: 5px;">
+<div style="clear: both; margin-top: 5px;">
 %s
 </div>
 
-<br/><br/>
+<div style="clear: both; margin-top: 5px;">
+%s
+</div>
+</center>
+
+<div class="footer">
+<hr/>
+<a href="http://fondos.org.es">Fondos de pantalla</a> · 
+<a href="http://wikis.org.es">Wikis</a>
+</div>
 
 </body>
-</html>""" % (metacardimgsrcmain, ctotal, menu, ''.join(maingalleryplain))
+</html>""" % (metacardimgsrcmain, len(ctotal), menu, ''.join(maingalleryplain), menu2)
     with open("index.html", "w") as f:
         f.write(index)
 
