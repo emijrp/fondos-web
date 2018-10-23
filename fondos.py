@@ -171,6 +171,18 @@ def getURL(url=''):
         print("Error retrieving: %s" % url)
     return raw
 
+def ga():
+    ga_ = """<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-127978837-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-127978837-1');
+</script>"""
+    return ga_
+
 def main():
     lang = "es"
     menulist = []
@@ -261,14 +273,15 @@ def main():
 <div class="footer">
 <hr/>
 <a href="http://wikis.cc">Crea tu wiki</a> · 
-<a href="http://locapedia.wikis.cc">Crear una locapedia</a> · 
+<a href="http://locapedia.wikis.cc">Crea una locapedia</a> · 
 <a href="http://fondos.org.es">Fondos de pantalla</a> · 
 <a href="http://librefind.org">LibreFind</a> · 
 <a href="http://wikis.org.es">Locapedias</a>
 </div>
 
+%s
 </body>
-</html>""" % (translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], metacardimgsrc, filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain)
+</html>""" % (translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], translations[lang][catname], metacardimgsrc, filehtml, translations[lang][catname], translations[lang][catname], c, menupages, galleryplain, ga())
             if cpage == 1:
                 menulist.append([filelabel, filehtml])
             filehtmlpage = filehtml
@@ -325,14 +338,15 @@ def main():
 <div class="footer">
 <hr/>
 <a href="http://wikis.cc">Crea tu wiki</a> · 
-<a href="http://locapedia.wikis.cc">Crear una locapedia</a> · 
+<a href="http://locapedia.wikis.cc">Crea una locapedia</a> · 
 <a href="http://fondos.org.es">Fondos de pantalla</a> · 
 <a href="http://librefind.org">LibreFind</a> · 
 <a href="http://wikis.org.es">Locapedias</a>
 </div>
 
+%s
 </body>
-</html>""" % (metacardimgsrcmain, len(ctotal), menu, ''.join(maingalleryplain), menu2)
+</html>""" % (metacardimgsrcmain, len(ctotal), menu, ''.join(maingalleryplain), menu2, ga())
     with open("index.html", "w") as f:
         f.write(index)
 
